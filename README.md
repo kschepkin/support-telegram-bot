@@ -25,12 +25,14 @@ support_bot
 - DB_PASSWORD - batabase owner's password
 - DB_NAME - database name
 - DB_HOST - database host
+
 message_cleaner
 - MESSAGES_TO_DELETE_HOURS - if last reply by admin time to message is less than number defined by that environment variable, it will be deleted from database
 - DB_USER - owner of database
 - DB_PASSWORD - batabase owner's password
 - DB_NAME - database name
 - DB_HOST - database host
+
 database:
 - see https://hub.docker.com/_/mysql
 
