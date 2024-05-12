@@ -1,0 +1,3 @@
+pymysql==1.1.0
+peewee==3.17.5
+cryptography==42.0.7

@@ -1,0 +1,41 @@
+version: "3.5"
+services:
+  database:
+    image: mysql:8.1
+    volumes:
+      - ./data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "passw"
+      MYSQL_DATABASE: "test_database"
+      MYSQL_USER: "bot"
+      MYSQL_PASSWORD: "11111"
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+  support_bot:
+    build: ./support_bot
+    volumes:
+      - ./support_bot:/usr/src/app
+    environment:
+      BOT_TOKEN: "TOKEN"
+      DB_USER: "bot"
+      DB_PASSWORD: "11111"
+      DB_NAME: "test_database"
+      DB_HOST: "database"
+    depends_on:
+      database:
+        condition: service_healthy
+  message_cleaner:
+    build: ./message_cleaner
+    volumes:
+      - ./message_cleaner:/usr/src/app
+    environment:
+      MESSAGES_TO_DELETE_HOURS: "72"
+      DB_USER: "bot"
+      DB_PASSWORD: "11111"
+      DB_NAME: "test_database"
+      DB_HOST: "database"
+    depends_on:
+      database:
+        condition: service_healthy
