@@ -8,7 +8,8 @@ This bot is ready-to-use for support teams. How it works:
 4. Admin replies to the message received from bot
 5. Bot sends admin's message to user who sent message at p.1
 
-Administrators can ban users by replying specified message to user's message ('Бан+1' by default)
+Administrators can ban users by replying specified message to user's message ('Бан+1' by default).
+
 Bot has anti-spam: by default one user can send 3 messages in one minute
 
 Execute command `docker-compose up -d` to start bot (docker-compose must be installed)
