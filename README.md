@@ -6,7 +6,8 @@ This bot is ready-to-use for support teams. How it works:
 2. Bot answers to user that his message is received (default - 'Ваше обращение успешно отправлено. Вам ответят в ближайшее время')
 3. Bot forwards the message to admin (or admin group)
 4. Admin replies to the message received from bot
-5. Bot sends admin's message to user who sent message at p
+5. Bot sends admin's message to user who sent message at p.1
+
 Administrators can ban users by replying specified message to user's message ('Бан+1' by default)
 Bot has anti-spam: by default one user can send 3 messages in one minute
 
