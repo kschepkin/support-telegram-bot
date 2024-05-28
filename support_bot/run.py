@@ -46,16 +46,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def forward_message_to_admin_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.chat_id == ADMIN_CHAT_ID:
+        forward_origin_message = update.message.reply_to_message.forward_origin.to_dict()
+        origin_message_chat_id = get_origin_message_chat_id(forward_origin_message)
         if update.message.text == BAN_MESSAGE:
-            forward_origin_message = update.message.reply_to_message.forward_origin.to_dict()
-            origin_message_chat_id = get_origin_message_chat_id(forward_origin_message)
             origin_message_user_nickname = get_user_nickname_by_origin_message(forward_origin_message)
             origin_message_user_full_name = get_user_full_name_by_origin_message(forward_origin_message)
             set_new_banned_user(origin_message_chat_id, origin_message_user_nickname, origin_message_user_full_name)
             remove_message_from_db(update.message.from_user.id)
         else:
-            forward_origin_message = update.message.reply_to_message.forward_origin.to_dict()
-            origin_message_chat_id = get_origin_message_chat_id(forward_origin_message)
             origin_message_timestamp = forward_origin_message['date']
             reply_parameters = telegram.ReplyParameters(message_id=get_message_id_from_db(origin_message_chat_id,
                                                                                           origin_message_timestamp),
