@@ -19,7 +19,7 @@ support_bot
 - BOT_TOKEN - bot token received from @BotFather
 - ADMIN_CHAT_ID - id of admin (or group of admins) who will answer to user's messages
 - BAN_MESSAGE - message which triggers ban of a user
-- COUNT_OF_MESSAGES_IN_PERIOD - count of messages which could be sent by user in period defined by COUNT_OF_MESSAGES_IN_PERIOD
+- COUNT_OF_MESSAGES_IN_PERIOD - count of messages which could be sent by user in period defined by MESSAGE_COUNT_PERIOD
 - MESSAGE_COUNT_PERIOD - period when user can send count of messages defined by COUNT_OF_MESSAGES_IN_PERIOD
 - MESSAGE_IS_RECEIVED_BY_ADMIN - message to user when he sends the message
 - START_MESSAGE - message when user runs `start` command (defualt 'Добрый день! Напишите сообщение — и мы обязательно ответим!')
