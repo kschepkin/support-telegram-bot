@@ -18,6 +18,7 @@ services:
     volumes:
       - ./support_bot:/usr/src/app
     environment:
+      ADMIN_CHAT_ID: "CHAT_ID"
       BOT_TOKEN: "TOKEN"
       DB_USER: "bot"
       DB_PASSWORD: "11111"
