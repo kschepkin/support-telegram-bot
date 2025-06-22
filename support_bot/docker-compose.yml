@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: support_bot_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: test_database
+      MYSQL_USER: bot
+      MYSQL_PASSWORD: 11111
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bot", "-p11111"]
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+      interval: 10s
+
+  support_bot:
+    build: .
+    container_name: support_bot_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID}
+      DB_HOST: mysql
+      DB_USER: bot
+      DB_PASSWORD: 11111
+      DB_NAME: test_database
+      BAN_MESSAGE: "Бан+1"
+      MESSAGE_COUNT_PERIOD: 60
+      COUNT_OF_MESSAGES_IN_PERIOD: 3
+      MESSAGE_IS_RECEIVED_BY_ADMIN: "Ваше обращение успешно отправлено. Вам ответят в ближайшее время"
+      START_MESSAGE: "Добрый день! Напишите сообщение — и мы обязательно ответим!"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "db_healthcheck.py", "--check-only"]
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      interval: 30s
+
+volumes:
+  mysql_data:

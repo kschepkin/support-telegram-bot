@@ -1,7 +1,8 @@
-version: "3.5"
+version: "3.8"
 services:
   database:
     image: mysql:8.1
+    container_name: support_bot_mysql
     volumes:
       - ./data:/var/lib/mysql
     environment:
@@ -9,26 +10,46 @@ services:
       MYSQL_DATABASE: "test_database"
       MYSQL_USER: "bot"
       MYSQL_PASSWORD: "11111"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bot", "-p11111"]
+      timeout: 10s
       retries: 10
+      start_period: 30s
+      interval: 10s
+    restart: unless-stopped
+
   support_bot:
     build: ./support_bot
+    container_name: support_bot_app
     volumes:
       - ./support_bot:/usr/src/app
     environment:
-      ADMIN_CHAT_ID: "CHAT_ID"
-      BOT_TOKEN: "TOKEN"
+      ADMIN_CHAT_ID: "79039545"
+      BOT_TOKEN: "6990036348:AAELTkw8aj-dI3fBJrEJSIJNoGIO1k2RZeA"
       DB_USER: "bot"
       DB_PASSWORD: "11111"
       DB_NAME: "test_database"
       DB_HOST: "database"
+      BAN_MESSAGE: "Бан+1"
+      MESSAGE_COUNT_PERIOD: "60"
+      COUNT_OF_MESSAGES_IN_PERIOD: "3"
+      MESSAGE_IS_RECEIVED_BY_ADMIN: "Ваше обращение успешно отправлено. Вам ответят в ближайшее время"
+      START_MESSAGE: "Добрый день! Напишите сообщение — и мы обязательно ответим!"
     depends_on:
       database:
         condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "/usr/src/app/db_healthcheck.py", "--check-only"]
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+      interval: 30s
+
   message_cleaner:
     build: ./message_cleaner
+    container_name: support_bot_cleaner
     volumes:
       - ./message_cleaner:/usr/src/app
     environment:
@@ -40,3 +61,12 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      support_bot:
+        condition: service_healthy  # Теперь ждет, пока бот полностью запустится и создаст таблицы
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]  # Простая проверка
+      timeout: 5s
+      retries: 3
+      start_period: 120s  # Даем больше времени на запуск
+      interval: 60s

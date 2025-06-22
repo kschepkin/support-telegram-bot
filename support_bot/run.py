@@ -2,8 +2,10 @@ import peewee
 import telegram
 import datetime
 import logging
+import sys
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters, CommandHandler
+from db_init import initialize_database, check_database_connection
 from db_connector import (dbhandle, Messages, BannedUsers, create_message_in_db, get_message_id_from_db,
                           set_last_reply_time, set_new_banned_user, remove_message_from_db,
                           get_banned_users,
@@ -334,27 +336,66 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.error(f"Не удалось отправить сообщение об ошибке: {e}")
 
 
+def init_database_with_retries(max_retries=3, delay=2):
+    """Инициализация базы данных с повторными попытками"""
+    import time
+    
+    for attempt in range(max_retries):
+        try:
+            logger.info(f"Попытка инициализации базы данных #{attempt + 1}")
+            
+            # Инициализируем базу данных
+            if initialize_database():
+                logger.info("База данных успешно инициализирована")
+                
+                # Проверяем подключение (необязательно для работы)
+                if check_database_connection():
+                    logger.info("Проверка подключения прошла успешно")
+                else:
+                    logger.warning("Проверка подключения не удалась, но база данных инициализирована")
+                
+                return True
+            else:
+                logger.warning("Не удалось инициализировать базу данных")
+                
+        except Exception as e:
+            logger.error(f"Ошибка при инициализации базы данных (попытка {attempt + 1}): {e}")
+        
+        if attempt < max_retries - 1:
+            logger.info(f"Ожидание {delay} секунд перед следующей попыткой...")
+            time.sleep(delay)
+            delay *= 2  # Экспоненциальное увеличение задержки
+    
+    logger.error("Не удалось инициализировать базу данных после всех попыток")
+    return False
+
+
 if __name__ == '__main__':
+    logger.info("Запуск Telegram бота поддержки...")
+    
+    # Инициализация базы данных с повторными попытками
+    if not init_database_with_retries():
+        logger.critical("Критическая ошибка: Не удалось инициализировать базу данных. Завершение работы.")
+        sys.exit(1)
+    
     try:
-        # Инициализация базы данных
-        dbhandle.connect()
-        Messages.create_table()
-        BannedUsers.create_table()
-        dbhandle.close()
-        logger.info("База данных успешно инициализирована")
-    except peewee.InternalError as px:
-        logger.error(f"Ошибка инициализации базы данных: {px}")
-        print(str(px))
-    
-    # Создание и настройка приложения
-    application = ApplicationBuilder().token(BOT_TOKEN).build()
-    
-    # Добавление обработчиков
-    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_message_to_admin_group))
-    application.add_handler(CommandHandler('start', start))
-    
-    # Добавление глобального обработчика ошибок
-    application.add_error_handler(error_handler)
-    
-    logger.info("Бот запущен и готов к работе")
-    application.run_polling()
+        # Создание и настройка приложения
+        application = ApplicationBuilder().token(BOT_TOKEN).build()
+        
+        # Добавление обработчиков
+        application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_message_to_admin_group))
+        application.add_handler(CommandHandler('start', start))
+        
+        # Добавление глобального обработчика ошибок
+        application.add_error_handler(error_handler)
+        
+        logger.info("Бот запущен и готов к работе")
+        application.run_polling()
+        
+    except KeyboardInterrupt:
+        logger.info("Получен сигнал прерывания. Завершение работы...")
+    except Exception as e:
+        logger.critical(f"Критическая ошибка при запуске бота: {e}")
+        sys.exit(1)
+    finally:
+        logger.info("Бот остановлен")
